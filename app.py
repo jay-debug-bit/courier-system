@@ -22,12 +22,6 @@ GATE_PASSWORD = "gate123"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
-# Student credentials (reg_no: password)
-STUDENT_CREDENTIALS = {
-    "sm23uefb223": "student123",
-    "sm24uefb100": "student123",
-}
-
 # -------------------------
 # SESSION STATE INIT
 # -------------------------
@@ -37,16 +31,22 @@ if "role" not in st.session_state:
     st.session_state.role = None
 if "reg_no" not in st.session_state:
     st.session_state.reg_no = None
+if "page" not in st.session_state:
+    st.session_state.page = "login"
 
 # -------------------------
-# CREATE CSV IF NOT EXISTS
+# CREATE CSV FILES IF NOT EXISTS
 # -------------------------
 if not os.path.exists("parcels.csv"):
-    df = pd.DataFrame(columns=[
+    pd.DataFrame(columns=[
         "student_name", "reg_no", "email",
         "hostel", "courier_company", "tracking_number", "status"
-    ])
-    df.to_csv("parcels.csv", index=False)
+    ]).to_csv("parcels.csv", index=False)
+
+if not os.path.exists("students.csv"):
+    pd.DataFrame(columns=[
+        "student_name", "reg_no", "email", "hostel", "password"
+    ]).to_csv("students.csv", index=False)
 
 # -------------------------
 # EMAIL FUNCTION
@@ -88,37 +88,77 @@ Mahindra University
         return False
 
 # -------------------------
+# LOGOUT BUTTON
+# -------------------------
+def show_logout():
+    with st.sidebar:
+        st.markdown(f"**Logged in as:** {st.session_state.role}")
+        if st.session_state.reg_no:
+            st.markdown(f"**Reg No:** {st.session_state.reg_no}")
+        if st.button("🚪 Logout"):
+            st.session_state.logged_in = False
+            st.session_state.role = None
+            st.session_state.reg_no = None
+            st.session_state.page = "login"
+            st.rerun()
+
+# -------------------------
+# REGISTER PAGE
+# -------------------------
+def show_register():
+    st.markdown("<h2 style='text-align:center'>📦 MU Couriers</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:gray'>Create a Student Account</p>", unsafe_allow_html=True)
+    st.markdown("---")
+
+    name = st.text_input("Full Name")
+    reg_no = st.text_input("Registration Number")
+    email = st.text_input("Personal Email")
+    hostel = st.selectbox("Hostel", ["Phase 1", "Phase 2", "Phase 3", "Phase 4A", "Phase 4B"])
+    pwd = st.text_input("Create Password", type="password")
+    confirm_pwd = st.text_input("Confirm Password", type="password")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("✅ Register", use_container_width=True):
+            if not all([name, reg_no, email, pwd, confirm_pwd]):
+                st.warning("Please fill all fields.")
+            elif pwd != confirm_pwd:
+                st.error("❌ Passwords do not match.")
+            else:
+                students_df = pd.read_csv("students.csv")
+
+                # Check if reg number already exists
+                if reg_no in students_df["reg_no"].astype(str).values:
+                    st.error("❌ This Registration Number is already registered.")
+                else:
+                    new_student = {
+                        "student_name": name,
+                        "reg_no": reg_no,
+                        "email": email,
+                        "hostel": hostel,
+                        "password": pwd
+                    }
+                    students_df = pd.concat(
+                        [students_df, pd.DataFrame([new_student])],
+                        ignore_index=True
+                    )
+                    students_df.to_csv("students.csv", index=False)
+                    st.success("✅ Account created! You can now log in.")
+                    st.session_state.page = "login"
+                    st.rerun()
+
+    with col2:
+        if st.button("← Back to Login", use_container_width=True):
+            st.session_state.page = "login"
+            st.rerun()
+
+# -------------------------
 # LOGIN PAGE
 # -------------------------
 def show_login():
-    st.markdown("""
-        <style>
-        .login-box {
-            max-width: 420px;
-            margin: 80px auto;
-            padding: 2.5rem;
-            background: #1e1e2e;
-            border-radius: 16px;
-            border: 1px solid #333;
-        }
-        .login-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-align: center;
-            margin-bottom: 0.2rem;
-        }
-        .login-sub {
-            text-align: center;
-            color: #aaaaaa;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="login-title">📦 MU Couriers</div>', unsafe_allow_html=True)
-    st.markdown('<div class="login-sub">Campus Courier Management System</div>', unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center'>📦 MU Couriers</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:gray'>Campus Courier Management System</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     role = st.selectbox("Login As", ["Student", "Gate Staff", "Admin"])
@@ -128,13 +168,24 @@ def show_login():
         pwd = st.text_input("Password", type="password")
 
         if st.button("Login", use_container_width=True):
-            if reg in STUDENT_CREDENTIALS and STUDENT_CREDENTIALS[reg] == pwd:
+            students_df = pd.read_csv("students.csv")
+            match = students_df[
+                (students_df["reg_no"].astype(str) == reg) &
+                (students_df["password"].astype(str) == pwd)
+            ]
+            if len(match) > 0:
                 st.session_state.logged_in = True
                 st.session_state.role = "Student"
                 st.session_state.reg_no = reg
                 st.rerun()
             else:
                 st.error("❌ Invalid Registration Number or Password.")
+
+        st.markdown("---")
+        st.markdown("<p style='text-align:center'>Don't have an account?</p>", unsafe_allow_html=True)
+        if st.button("📝 Register as Student", use_container_width=True):
+            st.session_state.page = "register"
+            st.rerun()
 
     elif role == "Gate Staff":
         username = st.text_input("Username")
@@ -159,18 +210,6 @@ def show_login():
                 st.rerun()
             else:
                 st.error("❌ Invalid credentials.")
-
-# -------------------------
-# LOGOUT BUTTON
-# -------------------------
-def show_logout():
-    with st.sidebar:
-        st.markdown(f"**Logged in as:** {st.session_state.role}")
-        if st.button("🚪 Logout"):
-            st.session_state.logged_in = False
-            st.session_state.role = None
-            st.session_state.reg_no = None
-            st.rerun()
 
 # =====================================================
 # GATE PORTAL
@@ -214,7 +253,7 @@ def gate_portal():
 # STUDENT PORTAL
 # =====================================================
 def student_portal():
-    st.header("🎓 Student Portal")
+    st.header("🎓 My Parcels")
 
     reg_no = st.session_state.reg_no
     df = pd.read_csv("parcels.csv")
@@ -237,7 +276,7 @@ def student_portal():
                 st.progress(progress.get(parcel["status"], 0))
                 st.divider()
     else:
-        st.info("No parcels found for your account.")
+        st.info("📭 No parcels found for your account yet.")
 
 # =====================================================
 # ADMIN DASHBOARD
@@ -258,7 +297,7 @@ def admin_dashboard():
     col4.metric("Collected", collected_count)
 
     st.divider()
-    st.subheader("Search Parcel")
+    st.subheader("All Parcels")
     keyword = st.text_input("Search by Registration Number")
     filtered_df = df
 
@@ -300,10 +339,15 @@ def admin_dashboard():
             st.error("Tracking Number Not Found")
 
     st.divider()
+    st.subheader("Registered Students")
+    students_df = pd.read_csv("students.csv")
+    st.dataframe(students_df[["student_name", "reg_no", "email", "hostel"]], use_container_width=True)
+
+    st.divider()
     st.subheader("Download Records")
     csv = df.to_csv(index=False)
     st.download_button(
-        label="📥 Download CSV",
+        label="📥 Download Parcels CSV",
         data=csv,
         file_name="parcels.csv",
         mime="text/csv"
@@ -313,7 +357,10 @@ def admin_dashboard():
 # MAIN APP ROUTER
 # =====================================================
 if not st.session_state.logged_in:
-    show_login()
+    if st.session_state.page == "register":
+        show_register()
+    else:
+        show_login()
 else:
     show_logout()
     if st.session_state.role == "Gate":
