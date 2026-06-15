@@ -51,7 +51,7 @@ if not os.path.exists("students.csv"):
 # -------------------------
 # EMAIL FUNCTION
 # -------------------------
-def send_notification_email(to_email, student_name, tracking_number, status="Collected at Gate"):
+def send_notification_email(to_email, student_name, tracking_number, status="Not Arrived Yet"):
     SENDER_EMAIL = "mucouriers@gmail.com"
     SENDER_PASSWORD = "yzdc gwdl txuo yeic"
 
@@ -127,8 +127,6 @@ def show_register():
                 st.error("❌ Passwords do not match.")
             else:
                 students_df = pd.read_csv("students.csv")
-
-                # Check if reg number already exists
                 if reg_no in students_df["reg_no"].astype(str).values:
                     st.error("❌ This Registration Number is already registered.")
                 else:
@@ -219,7 +217,7 @@ def gate_portal():
 
     student = st.text_input("Student Name")
     reg_no = st.text_input("Registration Number")
-    email = st.text_input("Student Email")
+    email = st.text_input("Personal Email")
     hostel = st.selectbox("Hostel", ["Phase 1", "Phase 2", "Phase 3", "Phase 4A", "Phase 4B"])
     courier = st.text_input("Courier Company")
     tracking = st.text_input("Tracking Number")
@@ -233,7 +231,7 @@ def gate_portal():
                 "hostel": hostel,
                 "courier_company": courier,
                 "tracking_number": tracking,
-                "status": "Collected at Gate"
+                "status": "Not Arrived Yet"
             }
             df = pd.read_csv("parcels.csv")
             df = pd.concat([df, pd.DataFrame([parcel])], ignore_index=True)
@@ -269,8 +267,9 @@ def student_portal():
                 st.write(f"**Status:** {parcel['status']}")
 
                 progress = {
-                    "Collected at Gate": 33,
-                    "Arrived at Mail Desk": 66,
+                    "Not Arrived Yet": 0,
+                    "Collected at Gate": 25,
+                    "Arrived at Mail Desk": 65,
                     "Parcel Collected": 100
                 }
                 st.progress(progress.get(parcel["status"], 0))
@@ -286,15 +285,17 @@ def admin_dashboard():
 
     df = pd.read_csv("parcels.csv")
     total = len(df)
+    not_arrived = len(df[df["status"] == "Not Arrived Yet"])
     gate_count = len(df[df["status"] == "Collected at Gate"])
     maildesk_count = len(df[df["status"] == "Arrived at Mail Desk"])
     collected_count = len(df[df["status"] == "Parcel Collected"])
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total Parcels", total)
-    col2.metric("At Gate", gate_count)
-    col3.metric("At Mail Desk", maildesk_count)
-    col4.metric("Collected", collected_count)
+    col2.metric("Not Arrived", not_arrived)
+    col3.metric("At Gate", gate_count)
+    col4.metric("At Mail Desk", maildesk_count)
+    col5.metric("Collected", collected_count)
 
     st.divider()
     st.subheader("All Parcels")
@@ -313,7 +314,7 @@ def admin_dashboard():
     tracking_number = st.text_input("Tracking Number")
     new_status = st.selectbox(
         "Select Status",
-        ["Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"]
+        ["Not Arrived Yet", "Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"]
     )
 
     if st.button("Update Status"):
