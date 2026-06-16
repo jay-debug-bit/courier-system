@@ -8,7 +8,7 @@ from email.message import EmailMessage
 # PAGE CONFIG
 # -------------------------
 st.set_page_config(
-    page_title="MU Couriers",
+    page_title="UniDrop",
     page_icon="📦",
     layout="wide"
 )
@@ -56,22 +56,22 @@ def send_notification_email(to_email, student_name, tracking_number, status="Not
     SENDER_PASSWORD = "yzdc gwdl txuo yeic"
 
     msg = EmailMessage()
-    msg['Subject'] = f"📦 MU Couriers: Parcel Update - {status}"
+    msg['Subject'] = f"📦 UniDrop: Parcel Update - {status}"
     msg['From'] = SENDER_EMAIL
     msg['To'] = to_email
 
     content = f"""
 Dear {student_name},
 
-Your parcel status has been updated in the MU Couriers system.
+Your parcel status has been updated in UniDrop.
 
 Tracking Number: {tracking_number}
 Current Status: {status}
 
-Thank you for using MU Couriers.
+Thank you for using UniDrop.
 
 Regards,
-MU Couriers
+UniDrop
 Mahindra University
     """
     msg.set_content(content)
@@ -106,21 +106,21 @@ def show_logout():
 # REGISTER PAGE
 # -------------------------
 def show_register():
-    st.markdown("<h2 style='text-align:center'>📦 MU Couriers</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center'>📦 UniDrop</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:gray'>Create a Student Account</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    name = st.text_input("Full Name")
-    reg_no = st.text_input("Registration Number")
-    email = st.text_input("Personal Email")
-    hostel = st.selectbox("Hostel", ["Phase 1", "Phase 2", "Phase 3", "Phase 4A", "Phase 4B"])
-    pwd = st.text_input("Create Password", type="password")
-    confirm_pwd = st.text_input("Confirm Password", type="password")
+    name = st.text_input("Full Name", key="reg_name")
+    reg_no = st.text_input("Registration Number", key="reg_reg_no")
+    email = st.text_input("Personal Email", key="reg_email")
+    hostel = st.selectbox("Hostel", ["Phase 1", "Phase 2", "Phase 3", "Phase 4A", "Phase 4B"], key="reg_hostel")
+    pwd = st.text_input("Create Password", type="password", key="reg_pwd")
+    confirm_pwd = st.text_input("Confirm Password", type="password", key="reg_confirm_pwd")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("✅ Register", use_container_width=True):
+        if st.button("✅ Register", use_container_width=True, key="reg_btn"):
             if not all([name, reg_no, email, pwd, confirm_pwd]):
                 st.warning("Please fill all fields.")
             elif pwd != confirm_pwd:
@@ -147,7 +147,7 @@ def show_register():
                     st.rerun()
 
     with col2:
-        if st.button("← Back to Login", use_container_width=True):
+        if st.button("← Back to Login", use_container_width=True, key="back_login"):
             st.session_state.page = "login"
             st.rerun()
 
@@ -155,17 +155,17 @@ def show_register():
 # LOGIN PAGE
 # -------------------------
 def show_login():
-    st.markdown("<h2 style='text-align:center'>📦 MU Couriers</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:gray'>Campus Courier Management System</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center'>📦 UniDrop</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:gray'>Campus Parcel Management</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    role = st.selectbox("Login As", ["Student", "Gate Staff", "Admin"])
+    role = st.selectbox("Login As", ["Student", "Gate Staff", "Admin"], key="login_role")
 
     if role == "Student":
-        reg = st.text_input("Registration Number")
-        pwd = st.text_input("Password", type="password")
+        reg = st.text_input("Registration Number", key="login_student_reg")
+        pwd = st.text_input("Password", type="password", key="login_student_pwd")
 
-        if st.button("Login", use_container_width=True):
+        if st.button("Login", use_container_width=True, key="login_student_btn"):
             students_df = pd.read_csv("students.csv")
             match = students_df[
                 (students_df["reg_no"].astype(str) == reg) &
@@ -181,15 +181,15 @@ def show_login():
 
         st.markdown("---")
         st.markdown("<p style='text-align:center'>Don't have an account?</p>", unsafe_allow_html=True)
-        if st.button("📝 Register as Student", use_container_width=True):
+        if st.button("📝 Register as Student", use_container_width=True, key="reg_page_btn"):
             st.session_state.page = "register"
             st.rerun()
 
     elif role == "Gate Staff":
-        username = st.text_input("Username")
-        pwd = st.text_input("Password", type="password")
+        username = st.text_input("Username", key="login_gate_user")
+        pwd = st.text_input("Password", type="password", key="login_gate_pwd")
 
-        if st.button("Login", use_container_width=True):
+        if st.button("Login", use_container_width=True, key="login_gate_btn"):
             if username == GATE_USERNAME and pwd == GATE_PASSWORD:
                 st.session_state.logged_in = True
                 st.session_state.role = "Gate"
@@ -198,10 +198,10 @@ def show_login():
                 st.error("❌ Invalid credentials.")
 
     elif role == "Admin":
-        username = st.text_input("Username")
-        pwd = st.text_input("Password", type="password")
+        username = st.text_input("Username", key="login_admin_user")
+        pwd = st.text_input("Password", type="password", key="login_admin_pwd")
 
-        if st.button("Login", use_container_width=True):
+        if st.button("Login", use_container_width=True, key="login_admin_btn"):
             if username == ADMIN_USERNAME and pwd == ADMIN_PASSWORD:
                 st.session_state.logged_in = True
                 st.session_state.role = "Admin"
@@ -215,14 +215,14 @@ def show_login():
 def gate_portal():
     st.header("🚪 Gate Portal")
 
-    student = st.text_input("Student Name")
-    reg_no = st.text_input("Registration Number")
-    email = st.text_input("Personal Email")
-    hostel = st.selectbox("Hostel", ["Phase 1", "Phase 2", "Phase 3", "Phase 4A", "Phase 4B"])
-    courier = st.text_input("Courier Company")
-    tracking = st.text_input("Tracking Number")
+    student = st.text_input("Student Name", key="gate_name")
+    reg_no = st.text_input("Registration Number", key="gate_reg")
+    email = st.text_input("Personal Email", key="gate_email")
+    hostel = st.selectbox("Hostel", ["Phase 1", "Phase 2", "Phase 3", "Phase 4A", "Phase 4B"], key="gate_hostel")
+    courier = st.text_input("Courier Company", key="gate_courier")
+    tracking = st.text_input("Tracking Number", key="gate_tracking")
 
-    if st.button("Register Parcel"):
+    if st.button("Register Parcel", key="gate_register_btn"):
         if student and reg_no and email and courier and tracking:
             parcel = {
                 "student_name": student,
@@ -299,7 +299,7 @@ def admin_dashboard():
 
     st.divider()
     st.subheader("All Parcels")
-    keyword = st.text_input("Search by Registration Number")
+    keyword = st.text_input("Search by Registration Number", key="admin_search")
     filtered_df = df
 
     if keyword:
@@ -311,13 +311,14 @@ def admin_dashboard():
 
     st.divider()
     st.subheader("Update Parcel Status")
-    tracking_number = st.text_input("Tracking Number")
+    tracking_number = st.text_input("Tracking Number", key="admin_tracking")
     new_status = st.selectbox(
         "Select Status",
-        ["Not Arrived Yet", "Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"]
+        ["Not Arrived Yet", "Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"],
+        key="admin_status"
     )
 
-    if st.button("Update Status"):
+    if st.button("Update Status", key="admin_update_btn"):
         index = df[df["tracking_number"] == tracking_number].index
 
         if len(index) > 0:
