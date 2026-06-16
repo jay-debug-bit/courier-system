@@ -513,6 +513,34 @@ def admin_dashboard():
 
     st.markdown("---")
 
+    # --- DELETE PARCEL RECORD FEATURE ---
+    st.subheader("🗑️ Delete Parcel Record")
+    st.caption("Permanently remove a parcel record from the system by Tracking Number.")
+    
+    del_tracking = st.text_input("Tracking Number to Delete", key="delete_track_input")
+    
+    if st.button("🗑️ Delete Record", width="stretch"):
+        if del_tracking:
+            df_del = pd.read_csv("parcels.csv")
+            idx = df_del[df_del["tracking_number"].astype(str) == del_tracking].index
+            
+            if len(idx) > 0:
+                df_del = df_del.drop(idx)
+                df_del.to_csv("parcels.csv", index=False)
+                
+                # Clean up OTP store if it exists for this tracking number
+                if del_tracking in st.session_state.otp_store:
+                    del st.session_state.otp_store[del_tracking]
+                    
+                st.success(f"✅ Record for tracking number **{del_tracking}** deleted successfully.")
+                st.rerun()
+            else:
+                st.error("❌ Tracking Number not found.")
+        else:
+            st.warning("Please enter a tracking number.")
+
+    st.markdown("---")
+
     # --- Update Parcel Status + OTP ---
     st.subheader("🔄 Update Parcel Status")
 
