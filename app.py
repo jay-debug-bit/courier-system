@@ -115,7 +115,7 @@ def show_logo(width=180):
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if os.path.exists("assets/logo.png"):
-            st.image("assets/logo.png", use_container_width=True)
+            st.image("assets/logo.png", width="stretch")
         else:
             st.markdown("<p class='brand-header'>UniDrop</p>", unsafe_allow_html=True)
 
@@ -190,7 +190,7 @@ def show_logout():
         if st.session_state.reg_no:
             st.markdown(f"**Reg No:** {st.session_state.reg_no}")
         st.markdown("---")
-        if st.button("🚪 Logout", use_container_width=True):
+        if st.button("🚪 Logout", width="stretch"):
             st.session_state.logged_in = False
             st.session_state.role = None
             st.session_state.reg_no = None
@@ -217,7 +217,7 @@ def show_register():
 
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("✅ Register", use_container_width=True):
+            if st.button("✅ Register", width="stretch"):
                 if not all([name, reg_no, email, pwd, confirm_pwd]):
                     st.warning("Please fill all fields.")
                 elif pwd != confirm_pwd:
@@ -243,7 +243,7 @@ def show_register():
                         st.session_state.page = "login"
                         st.rerun()
         with col2:
-            if st.button("← Back to Login", use_container_width=True):
+            if st.button("← Back to Login", width="stretch"):
                 st.session_state.page = "login"
                 st.rerun()
 
@@ -263,7 +263,7 @@ def show_login():
             reg = st.text_input("Registration Number")
             pwd = st.text_input("Password", type="password")
 
-            if st.button("Login", use_container_width=True):
+            if st.button("Login", width="stretch"):
                 students_df = pd.read_csv("students.csv")
                 match = students_df[
                     (students_df["reg_no"].astype(str) == reg) &
@@ -279,7 +279,7 @@ def show_login():
 
             st.markdown("---")
             st.markdown("<p style='text-align:center'>Don't have an account?</p>", unsafe_allow_html=True)
-            if st.button("📝 Register as Student", use_container_width=True):
+            if st.button("📝 Register as Student", width="stretch"):
                 st.session_state.page = "register"
                 st.rerun()
 
@@ -287,7 +287,7 @@ def show_login():
             username = st.text_input("Username")
             pwd = st.text_input("Password", type="password")
 
-            if st.button("Login", use_container_width=True):
+            if st.button("Login", width="stretch"):
                 if username == GATE_USERNAME and pwd == GATE_PASSWORD:
                     st.session_state.logged_in = True
                     st.session_state.role = "Gate"
@@ -299,7 +299,7 @@ def show_login():
             username = st.text_input("Username")
             pwd = st.text_input("Password", type="password")
 
-            if st.button("Login", use_container_width=True):
+            if st.button("Login", width="stretch"):
                 if username == ADMIN_USERNAME and pwd == ADMIN_PASSWORD:
                     st.session_state.logged_in = True
                     st.session_state.role = "Admin"
@@ -329,7 +329,7 @@ def gate_portal():
             courier = st.text_input("Courier Company")
             tracking = st.text_input("Tracking Number")
 
-        submitted = st.form_submit_button("📦 Register Parcel", use_container_width=True)
+        submitted = st.form_submit_button("📦 Register Parcel", width="stretch")
 
     if submitted:
         if student and reg_no and email and courier and tracking:
@@ -364,9 +364,9 @@ def gate_portal():
     today = datetime.now().strftime("%Y-%m-%d")
     if "registered_on" in df.columns:
         today_df = df[df["registered_on"].astype(str).str.startswith(today)]
-        st.dataframe(today_df[["student_name", "reg_no", "courier_company", "tracking_number", "hostel", "status"]], use_container_width=True)
+        st.dataframe(today_df[["student_name", "reg_no", "courier_company", "tracking_number", "hostel", "status"]], width="stretch")
     else:
-        st.dataframe(df[["student_name", "reg_no", "courier_company", "tracking_number", "hostel", "status"]], use_container_width=True)
+        st.dataframe(df[["student_name", "reg_no", "courier_company", "tracking_number", "hostel", "status"]], width="stretch")
 
 # =====================================================
 # STUDENT PORTAL
@@ -472,7 +472,7 @@ def admin_dashboard():
             title="Parcel Status Distribution",
             color_discrete_sequence=["#5C3D2E", "#7a5240", "#a0714f", "#c8a882", "#e8d5b7"]
         )
-        st.plotly_chart(fig1, use_container_width=True)
+        st.plotly_chart(fig1, width="stretch")
 
     with chart_col2:
         if "hostel" in df.columns and len(df) > 0:
@@ -483,7 +483,7 @@ def admin_dashboard():
                 title="Parcels by Hostel",
                 color_discrete_sequence=["#5C3D2E"]
             )
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width="stretch")
 
     if "registered_on" in df.columns and df["registered_on"].notna().any():
         df["date"] = pd.to_datetime(df["registered_on"], errors="coerce").dt.date
@@ -494,7 +494,7 @@ def admin_dashboard():
             markers=True,
             color_discrete_sequence=["#5C3D2E"]
         )
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width="stretch")
 
     st.markdown("---")
 
@@ -509,7 +509,7 @@ def admin_dashboard():
             df["student_name"].astype(str).str.contains(keyword, case=False, na=False)
         ]
 
-    st.dataframe(filtered_df, use_container_width=True)
+    st.dataframe(filtered_df, width="stretch")
 
     st.markdown("---")
 
@@ -525,7 +525,7 @@ def admin_dashboard():
             ["Not Arrived Yet", "Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"]
         )
 
-    if st.button("Update Status", use_container_width=True):
+    if st.button("Update Status", width="stretch"):
         index = df[df["tracking_number"].astype(str) == tracking_number].index
 
         if len(index) > 0:
@@ -566,7 +566,7 @@ def admin_dashboard():
     with otp_col2:
         entered_otp = st.text_input("Enter OTP from Student")
 
-    if st.button("✅ Verify OTP & Mark Collected", use_container_width=True):
+    if st.button("✅ Verify OTP & Mark Collected", width="stretch"):
         stored_otp = st.session_state.otp_store.get(verify_tracking)
         if not stored_otp:
             st.error("❌ No OTP found for this tracking number. Please update status to 'Arrived at Mail Desk' first.")
@@ -594,7 +594,7 @@ def admin_dashboard():
     students_df = pd.read_csv("students.csv")
     st.dataframe(
         students_df[["student_name", "reg_no", "email", "hostel"]],
-        use_container_width=True
+        width="stretch"
     )
 
     st.markdown("---")
