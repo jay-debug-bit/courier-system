@@ -26,25 +26,12 @@ st.markdown("""
         background-color: #7a5240;
         color: white;
     }
-    .brand-header {
-        text-align: center;
-        color: #5C3D2E;
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 0;
-    }
     .brand-sub {
         text-align: center;
         color: #888;
         font-size: 0.95rem;
         margin-top: 0;
     }
-    .sidebar-brand {
-        color: #5C3D2E;
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-    /* Fix logo white background on dark theme */
     [data-testid="stImage"] img {
         mix-blend-mode: luminosity;
         filter: brightness(0) invert(1);
@@ -91,19 +78,16 @@ def show_logo(width=250):
         if os.path.exists("assets/logo.png"):
             st.image("assets/logo.png", width=width)
         else:
-            st.markdown("<p class='brand-header'>📦 UniDrop</p>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align:center'>📦 UniDrop</h2>", unsafe_allow_html=True)
 
 def send_notification_email(to_email, student_name, tracking_number, status="Not Arrived Yet", otp=None):
     SENDER_EMAIL = "mucouriers@gmail.com"
     SENDER_PASSWORD = "yzdc gwdl txuo yeic"
-
     msg = EmailMessage()
     msg['Subject'] = f"📦 UniDrop: Parcel Update - {status}"
     msg['From'] = SENDER_EMAIL
     msg['To'] = to_email
-
     otp_section = f"\n🔐 Your Collection OTP: {otp}\nPlease show this OTP at the mail desk to collect your parcel.\n" if otp else ""
-
     content = f"""
 Dear {student_name},
 
@@ -118,7 +102,6 @@ Regards,
 UniDrop Team
     """
     msg.set_content(content)
-
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
@@ -149,7 +132,7 @@ def show_logout():
                 unsafe_allow_html=True
             )
         else:
-            st.markdown("<span class='sidebar-brand'>UniDrop</span>", unsafe_allow_html=True)
+            st.markdown("**UniDrop**")
         st.markdown("---")
         st.markdown(f"**Role:** {st.session_state.role}")
         if st.session_state.reg_no:
@@ -195,16 +178,10 @@ def show_register():
                     st.error("❌ This Registration Number is already registered.")
                 else:
                     new_student = {
-                        "student_name": name,
-                        "reg_no": reg_no,
-                        "email": email,
-                        "hostel": hostel,
-                        "password": pwd
+                        "student_name": name, "reg_no": reg_no,
+                        "email": email, "hostel": hostel, "password": pwd
                     }
-                    students_df = pd.concat(
-                        [students_df, pd.DataFrame([new_student])],
-                        ignore_index=True
-                    )
+                    students_df = pd.concat([students_df, pd.DataFrame([new_student])], ignore_index=True)
                     students_df.to_csv("students.csv", index=False)
                     st.success("✅ Account created! You can now log in.")
                     st.session_state.page = "login"
@@ -214,7 +191,7 @@ def show_login():
     _, center, _ = st.columns([1, 2, 1])
     with center:
         show_logo()
-        st.markdown("<p class='brand-sub'>Campus Courier Management System</p>", unsafe_allow_html=True)
+        st.markdown("<p class='brand-sub'>Campus Parcel Management</p>", unsafe_allow_html=True)
         st.markdown("---")
         role = st.selectbox("Login As", ["Student", "Gate Staff", "Admin"])
         if role == "Student":
@@ -284,14 +261,9 @@ def gate_portal():
     if submitted:
         if student and reg_no and email and courier and tracking:
             parcel = {
-                "student_name": student,
-                "reg_no": reg_no,
-                "email": email,
-                "hostel": hostel,
-                "courier_company": courier,
-                "tracking_number": tracking,
-                "status": "Not Arrived Yet",
-                "pickup_slot": "",
+                "student_name": student, "reg_no": reg_no, "email": email,
+                "hostel": hostel, "courier_company": courier, "tracking_number": tracking,
+                "status": "Not Arrived Yet", "pickup_slot": "",
                 "registered_on": datetime.now().strftime("%Y-%m-%d %H:%M")
             }
             df = pd.read_csv("parcels.csv")
@@ -321,11 +293,8 @@ def student_portal():
     df = pd.read_csv("parcels.csv")
     result = df[df["reg_no"].astype(str).str.strip() == reg_no.strip()]
     available_slots = [
-        "6:00 PM - 6:30 PM",
-        "6:30 PM - 7:00 PM",
-        "7:00 PM - 7:30 PM",
-        "7:30 PM - 8:00 PM",
-        "8:00 PM - 8:30 PM",
+        "6:00 PM - 6:30 PM", "6:30 PM - 7:00 PM",
+        "7:00 PM - 7:30 PM", "7:30 PM - 8:00 PM", "8:00 PM - 8:30 PM"
     ]
     if len(result) > 0:
         st.success(f"Found {len(result)} parcel(s) for your account.")
@@ -345,20 +314,14 @@ def student_portal():
                     else:
                         st.warning("No pickup slot booked yet.")
                 progress_map = {
-                    "Not Arrived Yet": 0,
-                    "Collected at Gate": 25,
-                    "Arrived at Mail Desk": 65,
-                    "Parcel Collected": 100
+                    "Not Arrived Yet": 0, "Collected at Gate": 25,
+                    "Arrived at Mail Desk": 65, "Parcel Collected": 100
                 }
                 st.progress(progress_map.get(parcel["status"], 0))
-                if parcel["status"] not in ["Parcel Collected"]:
+                if parcel["status"] != "Parcel Collected":
                     st.markdown("**📅 Book / Change Pickup Slot**")
-                    selected_slot = st.selectbox(
-                        "Choose a slot (after academic hours):",
-                        available_slots,
-                        key=f"slot_{index}"
-                    )
-                    if st.button(f"Confirm Slot", key=f"confirm_{index}"):
+                    selected_slot = st.selectbox("Choose a slot:", available_slots, key=f"slot_{index}")
+                    if st.button("Confirm Slot", key=f"confirm_{index}"):
                         df.loc[index, "pickup_slot"] = selected_slot
                         df.to_csv("parcels.csv", index=False)
                         st.success(f"✅ Pickup slot booked: {selected_slot}")
@@ -370,48 +333,35 @@ def student_portal():
 def admin_dashboard():
     st.markdown("## 📊 Admin Dashboard")
     df = pd.read_csv("parcels.csv")
-    total = len(df)
-    not_arrived = len(df[df["status"] == "Not Arrived Yet"])
-    gate_count = len(df[df["status"] == "Collected at Gate"])
-    maildesk_count = len(df[df["status"] == "Arrived at Mail Desk"])
-    collected_count = len(df[df["status"] == "Parcel Collected"])
     col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("📦 Total", total)
-    col2.metric("⏳ Not Arrived", not_arrived)
-    col3.metric("🚪 At Gate", gate_count)
-    col4.metric("📬 Mail Desk", maildesk_count)
-    col5.metric("✅ Collected", collected_count)
+    col1.metric("📦 Total", len(df))
+    col2.metric("⏳ Not Arrived", len(df[df["status"] == "Not Arrived Yet"]))
+    col3.metric("🚪 At Gate", len(df[df["status"] == "Collected at Gate"]))
+    col4.metric("📬 Mail Desk", len(df[df["status"] == "Arrived at Mail Desk"]))
+    col5.metric("✅ Collected", len(df[df["status"] == "Parcel Collected"]))
     st.markdown("---")
     st.subheader("📈 Analytics")
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
         status_counts = df["status"].value_counts().reset_index()
         status_counts.columns = ["Status", "Count"]
-        fig1 = px.pie(
-            status_counts, names="Status", values="Count",
+        fig1 = px.pie(status_counts, names="Status", values="Count",
             title="Parcel Status Distribution",
-            color_discrete_sequence=["#5C3D2E", "#7a5240", "#a0714f", "#c8a882", "#e8d5b7"]
-        )
+            color_discrete_sequence=["#5C3D2E", "#7a5240", "#a0714f", "#c8a882", "#e8d5b7"])
         st.plotly_chart(fig1, use_container_width=True)
     with chart_col2:
-        if "hostel" in df.columns and len(df) > 0:
+        if len(df) > 0:
             hostel_counts = df["hostel"].value_counts().reset_index()
             hostel_counts.columns = ["Hostel", "Count"]
-            fig2 = px.bar(
-                hostel_counts, x="Hostel", y="Count",
-                title="Parcels by Hostel",
-                color_discrete_sequence=["#5C3D2E"]
-            )
+            fig2 = px.bar(hostel_counts, x="Hostel", y="Count",
+                title="Parcels by Hostel", color_discrete_sequence=["#5C3D2E"])
             st.plotly_chart(fig2, use_container_width=True)
     if "registered_on" in df.columns and df["registered_on"].notna().any():
         df["date"] = pd.to_datetime(df["registered_on"], errors="coerce").dt.date
         daily = df.groupby("date").size().reset_index(name="Parcels")
-        fig3 = px.line(
-            daily, x="date", y="Parcels",
-            title="Daily Parcel Registrations",
-            markers=True,
-            color_discrete_sequence=["#5C3D2E"]
-        )
+        fig3 = px.line(daily, x="date", y="Parcels",
+            title="Daily Parcel Registrations", markers=True,
+            color_discrete_sequence=["#5C3D2E"])
         st.plotly_chart(fig3, use_container_width=True)
     st.markdown("---")
     st.subheader("📋 All Parcels")
@@ -430,10 +380,8 @@ def admin_dashboard():
         with col_a:
             tracking_number = st.text_input("Tracking Number")
         with col_b:
-            new_status = st.selectbox(
-                "Select New Status",
-                ["Not Arrived Yet", "Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"]
-            )
+            new_status = st.selectbox("Select New Status",
+                ["Not Arrived Yet", "Collected at Gate", "Arrived at Mail Desk", "Parcel Collected"])
         update_btn = st.form_submit_button("Update Status", use_container_width=True)
     if update_btn:
         index = df[df["tracking_number"].astype(str) == tracking_number].index
@@ -446,60 +394,48 @@ def admin_dashboard():
             if new_status == "Arrived at Mail Desk":
                 otp = generate_otp()
                 st.session_state.otp_store[tracking_number] = otp
-                st.info(f"🔐 OTP generated for **{tracking_number}**: `{otp}` (also sent to student via email)")
-            with st.spinner("Sending status update email..."):
-                email_sent = send_notification_email(
-                    student_email, student_name, tracking_number, new_status, otp
-                )
+                st.info(f"🔐 OTP for **{tracking_number}**: `{otp}` (also sent to student)")
+            with st.spinner("Sending email..."):
+                email_sent = send_notification_email(student_email, student_name, tracking_number, new_status, otp)
             if email_sent:
-                st.success("✅ Status updated! Student notified via email.")
+                st.success("✅ Status updated! Student notified.")
             else:
-                st.success("Status updated! (Email notification failed)")
+                st.success("Status updated! (Email failed)")
         else:
             st.error("❌ Tracking Number not found.")
     st.markdown("---")
     st.subheader("🔐 OTP Verification for Collection")
-    st.caption("Verify student OTP before handing over the parcel.")
     with st.form("otp_form"):
         otp_col1, otp_col2 = st.columns(2)
         with otp_col1:
-            verify_tracking = st.text_input("Tracking Number for Verification")
+            verify_tracking = st.text_input("Tracking Number")
         with otp_col2:
             entered_otp = st.text_input("Enter OTP from Student")
         verify_btn = st.form_submit_button("✅ Verify OTP & Mark Collected", use_container_width=True)
     if verify_btn:
         stored_otp = st.session_state.otp_store.get(verify_tracking)
         if not stored_otp:
-            st.error("❌ No OTP found for this tracking number. Please update status to 'Arrived at Mail Desk' first.")
+            st.error("❌ No OTP found. Update status to 'Arrived at Mail Desk' first.")
         elif entered_otp.strip() == stored_otp:
             idx = df[df["tracking_number"].astype(str) == verify_tracking].index
             if len(idx) > 0:
                 df.loc[idx, "status"] = "Parcel Collected"
                 df.to_csv("parcels.csv", index=False)
                 del st.session_state.otp_store[verify_tracking]
-                student_email = df.loc[idx[0], "email"]
-                student_name = df.loc[idx[0], "student_name"]
-                send_notification_email(student_email, student_name, verify_tracking, "Parcel Collected")
-                st.success("✅ OTP verified! Parcel marked as Collected and student notified.")
+                send_notification_email(df.loc[idx[0], "email"], df.loc[idx[0], "student_name"], verify_tracking, "Parcel Collected")
+                st.success("✅ OTP verified! Parcel marked as Collected.")
             else:
                 st.error("❌ Tracking number not found.")
         else:
-            st.error("❌ Incorrect OTP. Please try again.")
+            st.error("❌ Incorrect OTP.")
     st.markdown("---")
     st.subheader("👥 Registered Students")
     students_df = pd.read_csv("students.csv")
-    st.dataframe(
-        students_df[["student_name", "reg_no", "email", "hostel"]],
-        use_container_width=True
-    )
+    st.dataframe(students_df[["student_name", "reg_no", "email", "hostel"]], use_container_width=True)
     st.markdown("---")
     st.subheader("📥 Download Records")
-    st.download_button(
-        label="📥 Download Parcels CSV",
-        data=df.to_csv(index=False),
-        file_name="unidrop_parcels.csv",
-        mime="text/csv"
-    )
+    st.download_button(label="📥 Download Parcels CSV",
+        data=df.to_csv(index=False), file_name="unidrop_parcels.csv", mime="text/csv")
 
 if not st.session_state.logged_in:
     if st.session_state.page == "register":
