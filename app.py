@@ -59,7 +59,6 @@ st.markdown("""
         background-color: transparent !important;
         border-radius: 0 !important;
         box-shadow: none !important;
-        mix-blend-mode: lighten;
     }
     [data-testid="stSidebar"] [data-testid="stImage"] {
         background-color: transparent !important;
@@ -178,7 +177,7 @@ def show_logout():
                 f"""
                 <div style="display:flex; justify-content:center; padding: 8px 0 4px 0;">
                     <img src="data:image/png;base64,{logo_b64}"
-                         style="width:130px; background:transparent; mix-blend-mode:lighten;" />
+                         style="width:130px; background:transparent;" />
                 </div>
                 """,
                 unsafe_allow_html=True
